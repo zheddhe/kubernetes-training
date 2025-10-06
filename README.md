@@ -67,8 +67,12 @@ kubectl version
 k3s kubectl get nodes
 # ...
 
-# creaton d'une instance NGINX
+# creaton d'une instance NGINX et listing des pods
 kubectl run nginx --image=nginx
+kubectl get pod
+
+# execution d'un pod configuré par yaml et listing des pods
+kubectl apply -f wordpress.yml
 kubectl get pod
 ```
 
