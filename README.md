@@ -74,6 +74,20 @@ kubectl get pod
 # execution d'un pod configuré par yaml et listing des pods
 kubectl apply -f wordpress.yml
 kubectl get pod
+
+# suppression de pod
+kubectl delete pod nginx wordpress
+kubectl get pod
+
+# creation et suppression d'un déploiement de 10 replicas NGINX
+kubectl create deployment nginx-deployment --image=nginx --replicas=10
+kubectl delete deployment nginx-deployment
+
+# execution d'un deploiement de pod configuré par yaml et listing des pods
+kubectl apply -f deployment.yml
+
+# lister les ressources
+kubectl api-resources
 ```
 
 
