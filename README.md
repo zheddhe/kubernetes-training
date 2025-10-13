@@ -58,7 +58,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.29.5+k3s1 sh -s - --write-
 kubectl version
 ```
 
-### Management
+### Management des pods/services
 
 ```bash
 ### commands are like : kubectl [command] [TYPE] [NAME] [flags]
@@ -72,7 +72,7 @@ kubectl run nginx --image=nginx
 kubectl get pod
 
 # execution d'un pod configuré par yaml et listing des pods
-kubectl apply -f wordpress.yml
+kubectl apply -f pod/wordpress.yml
 kubectl get pod
 
 # suppression de pod créés par les deux méthodes
@@ -83,7 +83,7 @@ kubectl create deployment nginx-deployment --image=nginx --replicas=10
 kubectl delete deployment nginx-deployment
 
 # execution d'un deploiement de pod configuré par yaml
-kubectl apply -f deployment.yml
+kubectl apply -f deploy/deployment.yml
 
 # lister les ressources
 kubectl api-resources
@@ -94,7 +94,7 @@ kubectl get service # ou kubectl get svc
 kubectl delete service nginx-deployment
 
 # déployer un cluster IP service configuré par yaml
-kubectl apply -f service_cluster_ip.yml
+kubectl apply -f svc/service_cluster_ip.yml
 
 # lister les endpoints des services
 kubectl get endpoints
@@ -109,12 +109,12 @@ kubectl get service # ou kubectl get svc
 kubectl delete service nginx-deployment
 
 # déployer un node port service configuré par yaml
-kubectl apply -f service_node_port.yml
+kubectl apply -f svc/service_node_port.yml
 
 # deployer un load balancer service et le consulter puis le supprimer 
 # - prérequis : requiert MetalLB pour simuler un loadbalancer
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
-kubectl apply -f metallb_config.yaml
+kubectl apply -f svc/metallb_config.yaml
 # - les commandes service a proprement parler
 kubectl expose deployment nginx-deployment --port=80 --type=LoadBalancer
 kubectl get service # ou kubectl get svc
@@ -135,14 +135,14 @@ http://10.0.0.241  (MetalLB IP)
 
 ```bash
 # déployer un load balancer service configuré par yaml
-kubectl apply -f service_load_balancer.yml
+kubectl apply -f svc/service_load_balancer.yml
 
 # vérifier les replica set et les resizer dynamiquement
 kubectl get replicaset # ou kubectl get rs
 kubectl scale deploy nginx-deployment --replicas=1
 
 # créer un replica set par yaml
-kubectl create -f replica_set.yml
+kubectl create -f rs/replica_set.yml
 
 # visualiser les composant d'un replica set
 kubectl describe replicaset httpd-replicaset # ou kubectl describe rs httpd-replicaset
@@ -160,4 +160,14 @@ kubectl get pod,deploy -n datascientest
 kubectl delete namespace datascientest
 ```
 
+### Management des volumes
+
+```bash
+# creation d'un volume via yaml (pas de ligne de commande disponible) et listing
+kubectl apply -f pv/persistent_volume.yml
+kubectl get pv
+
+# verifier les classes de stockage
+kubectl get storageclass
+```
 
