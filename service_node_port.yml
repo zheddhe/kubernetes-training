@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: NodePort   # 👈 accès depuis l’extérieur via le port du nœud
+  selector:
+    app: web       # 👈 correspond au label du Deployment
+  ports:
+    - protocol: TCP
+      port: 80          # 👈 port exposé dans le cluster (Service)
+      targetPort: 80    # 👈 port du conteneur dans le Pod
+      nodePort: 30080   # 👈 (optionnel) port sur le nœud (sinon assigné automatiquement entre 30000-32767)

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer    # 👈 accessible depuis l’extérieur
+  selector:
+    app: web            # 👈 correspond au label de ton Deployment
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80          # 👈 port d’écoute du Service (stable)
+      targetPort: 80    # 👈 port exposé dans les Pods (containerPort)

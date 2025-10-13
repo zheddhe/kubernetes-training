@@ -75,19 +75,89 @@ kubectl get pod
 kubectl apply -f wordpress.yml
 kubectl get pod
 
-# suppression de pod
+# suppression de pod créés par les deux méthodes
 kubectl delete pod nginx wordpress
-kubectl get pod
 
 # creation et suppression d'un déploiement de 10 replicas NGINX
 kubectl create deployment nginx-deployment --image=nginx --replicas=10
 kubectl delete deployment nginx-deployment
 
-# execution d'un deploiement de pod configuré par yaml et listing des pods
+# execution d'un deploiement de pod configuré par yaml
 kubectl apply -f deployment.yml
 
 # lister les ressources
 kubectl api-resources
+
+# deployer un cluster IP service et le consulter puis le supprimer
+kubectl expose deploy nginx-deployment --port=80 --type=ClusterIP
+kubectl get service # ou kubectl get svc
+kubectl delete service nginx-deployment
+
+# déployer un cluster IP service configuré par yaml
+kubectl apply -f service_cluster_ip.yml
+
+# lister les endpoints des services
+kubectl get endpoints
+
+# créer un pod permettant de faire du curl interactif (ou l'exécuter par suite)
+kubectl run curl --image=curlimages/curl -i --tty -- sh
+kubectl exec curl -i --tty -- sh
+
+# deployer un node port service et le consulter puis le supprimer
+kubectl expose deployment nginx-deployment --port=80 --type=NodePort
+kubectl get service # ou kubectl get svc
+kubectl delete service nginx-deployment
+
+# déployer un node port service configuré par yaml
+kubectl apply -f service_node_port.yml
+
+# deployer un load balancer service et le consulter puis le supprimer 
+# - prérequis : requiert MetalLB pour simuler un loadbalancer
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
+kubectl apply -f metallb_config.yaml
+# - les commandes service a proprement parler
+kubectl expose deployment nginx-deployment --port=80 --type=LoadBalancer
+kubectl get service # ou kubectl get svc
+kubectl delete service nginx-deployment
+```
+
+```texte
+[Client local] 
+     ↓
+http://10.0.0.241  (MetalLB IP)
+     ↓
+[NodePort (automatique)]
+     ↓
+[ClusterIP]
+     ↓
+[Pods nginx-deployment]
+```
+
+```bash
+# déployer un load balancer service configuré par yaml
+kubectl apply -f service_load_balancer.yml
+
+# vérifier les replica set et les resizer dynamiquement
+kubectl get replicaset # ou kubectl get rs
+kubectl scale deploy nginx-deployment --replicas=1
+
+# créer un replica set par yaml
+kubectl create -f replica_set.yml
+
+# visualiser les composant d'un replica set
+kubectl describe replicaset httpd-replicaset # ou kubectl describe rs httpd-replicaset
+
+# lister et créer des namespace et afficher leur ressources specifiques
+kubectl get namespace # ou kubectl get ns
+kubectl create namespace datascientest
+kubectl get all -n datascientest
+
+# exemple d'utilisation du namespace et récupération multi cible
+kubectl create deployment wordpress --image=wordpress --replicas=3 --namespace datascientest
+kubectl get pod,deploy -n datascientest
+
+# suppression (/!\ en cascade) d'un namespace et de tout ses composants
+kubectl delete namespace datascientest
 ```
 
 
