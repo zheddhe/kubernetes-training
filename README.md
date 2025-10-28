@@ -56,9 +56,16 @@ uv --version
 # download / install / check version
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.29.5+k3s1 sh -s - --write-kubeconfig-mode 644
 kubectl version
+
+# propagation de la config pour le user courant (puis l'activer via l'extension kubernetes)
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $USER:$USER ~/.kube/config
+kubectl cluster-info
+kubectl get nodes -o wide
 ```
 
-### Management des pods/services
+### Management des pods/services (/pod + /deploy + /svc)
 
 ```bash
 ### commands are like : kubectl [command] [TYPE] [NAME] [flags]
@@ -160,14 +167,30 @@ kubectl get pod,deploy -n datascientest
 kubectl delete namespace datascientest
 ```
 
-### Management des volumes
+### Management des volumes (/pv)
 
 ```bash
+# verifier les classes de stockage
+kubectl get storageclass
+
 # creation d'un volume via yaml (pas de ligne de commande disponible) et listing
 kubectl apply -f pv/persistent_volume.yml
 kubectl get pv
 
-# verifier les classes de stockage
-kubectl get storageclass
+# creation d'un volume claim via yaml (pas de ligne de commande disponible) et listing
+kubectl apply -f pv/persistent_volume_claim.yml
+kubectl get pvc
+
+# creer un pod consommant ce volume claim
+kubectl apply -f pv/datascientest_pod.yml
+kubectl get pod | grep pod-datascientest
+
+# Ajustement du contenu du pod et démarrage d'un service associé
+kubectl exec -it pod-datascientest -- bin/bash
+# -- dans le shell du pod
+echo "DATASCIENTEST" > /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html
+# -- à l'extérieur du pod
+kubectl apply -f pv/datascientest_service.yml
 ```
 
