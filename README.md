@@ -167,7 +167,7 @@ kubectl get pod,deploy -n datascientest
 kubectl delete namespace datascientest
 ```
 
-### Management des volumes (/pv)
+### Management des persistent volumes et claims (/pv + /pvc)
 
 ```bash
 # verifier les classes de stockage
@@ -178,11 +178,11 @@ kubectl apply -f pv/persistent_volume.yml
 kubectl get pv
 
 # creation d'un volume claim via yaml (pas de ligne de commande disponible) et listing
-kubectl apply -f pv/persistent_volume_claim.yml
+kubectl apply -f pvc/persistent_volume_claim.yml
 kubectl get pvc
 
 # creer un pod consommant ce volume claim
-kubectl apply -f pv/datascientest_pod.yml
+kubectl apply -f pvc/datascientest_pod.yml
 kubectl get pod | grep pod-datascientest
 
 # Ajustement du contenu du pod et démarrage d'un service associé
@@ -191,6 +191,61 @@ kubectl exec -it pod-datascientest -- bin/bash
 echo "DATASCIENTEST" > /usr/share/nginx/html/index.html
 cat /usr/share/nginx/html/index.html
 # -- à l'extérieur du pod
-kubectl apply -f pv/datascientest_service.yml
+kubectl apply -f pvc/datascientest_service.yml
 ```
 
+### Management des secrets et config map (/secret + /cm)
+
+```bash
+# conversion d'un secret en base 64
+echo -n 'Datascientest2023@!!' | base64 # le mot de passe root sera "Datascientest2023@!!"
+
+# creation d'un secret via yaml et listing
+kubectl apply -f secret/secret.yml
+kubectl get secret
+kubectl describe secret mariadb-root-password
+
+# édition d'un secret
+kubectl edit secret mariadb-root-password
+
+# recuperation et decodage d'un secret
+kubectl get secret mariadb-root-password -o jsonpath='{.data.password}' | base64 --decode
+
+# creation d'un secret via ligne de commande puis récupération
+kubectl create secret generic mariadb-user --from-literal=MARIADB_USER=datascientestuser --from-literal=MARIADB_PASSWORD=DatascientestMariadb@..
+kubectl get secret mariadb-user -o jsonpath='{.data.MARIADB_USER}' | base64 --decode
+kubectl get secret mariadb-user -o jsonpath='{.data.MARIADB_PASSWORD}' | base64 --decode
+
+# creation d'une config map par ligne de commande et listing
+kubectl create configmap cm-mariadb --from-file=cm/mysqld.cnf
+kubectl describe cm cm-mariadb
+kubectl delete cm cm-mariadb
+
+# edition puis récupération de la conf
+kubectl edit configmap cm-mariadb
+kubectl get configmap cm-mariadb -o jsonpath='{.data.mysqld\.cnf}' # le . doit être échapé en \.
+# alternative avec go-template
+kubectl get configmap cm-mariadb -o go-template='{{ index .data "mysqld.cnf" }}'
+
+# creation (ou réapplication) d'un statefulset mariadb utilisant les secret par reference de variable d'env/fichier de configmap
+kubectl create -f cm/statefulset.yml --save-config
+
+# reapplication (suite a modif) du statefulset mariadb
+kubectl apply -f cm/statefulset.yml
+# redémarrage d'un statefulset si changement (cas replica == 1)
+kubectl delete pod mariadb-0
+# (alternatif propre) redémarrage d'un statefulset si changement (cas replica > 1)
+kubectl rollout restart statefulset mariadb
+kubectl rollout status statefulset mariadb
+
+# afficher les variable d'env d'un pod
+kubectl exec -it mariadb-0 -- env | grep MARIADB
+
+# vérifier les bind de config 
+kubectl exec -it mariadb-0 -- ls -latR /etc/mysql/conf.d
+
+# execution d'un bash dans l'instance pod mariadb et affichage des BDD (Cf doc mariadb)
+kubectl exec -it mariadb-0 -- /bin/sh
+mysql -uroot -p${MARIADB_ROOT_PASSWORD} -e 'show databases;'
+mysql -uroot -p${MARIADB_ROOT_PASSWORD} -e "SHOW VARIABLES LIKE 'max_allowed_packet';"
+```

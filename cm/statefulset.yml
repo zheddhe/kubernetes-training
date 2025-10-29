@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+spec:
+  selector:
+    matchLabels:
+      app: mariadb
+  serviceName: mariadb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: docker.io/mariadb:10.4
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: config
+              mountPath: etc/mysql/conf.d
+          # Secret par clés explicites en variable d'env
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-root-password
+                  key: password
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-user
+                  key: MARIADB_USER
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-user
+                  key: MARIADB_PASSWORD
+          # Alternative avec secret par reference globale d'env
+          # envFrom:
+          #   - secretRef:
+          #       name: mariadb-user
+          #   - secretRef:
+          #       name: mariadb-root-password
+      # Volumes (niveau Pod)
+      volumes:
+        # volume sans persistance pour data (solution simple sans PVC et storage class)
+        - emptyDir: {}
+          name: data
+        # volume pour la connexion de la configmap a un fichier du host
+        - name: config
+          configMap:
+            name: cm-mariadb
+            items:
+              - key: mysqld.cnf
+                path: mysqld.cnf
