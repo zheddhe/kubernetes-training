@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-analysis-api
+  labels:
+    app: sentiment-analysis-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sentiment-analysis-api
+  template:
+    metadata:
+      labels:
+        app: sentiment-analysis-api
+    spec:
+      containers:
+      - name: sentiment-analysis-api
+        image: datascientest/fake-api:1.0.0
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        # envFrom:
+        # - configMapRef:
+        #     name: my-config-map
+        env:
+        - name: ENVIRONMENT_TYPE
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: my-key

@@ -263,3 +263,34 @@ kubectl edit deploy vote
 kubectl get deploy,rs,pods
 kubectl describe pod vote-xxxx # ajuster avec le nom effectif du pod
 ```
+
+### Exercice de déploiement API (/exo_api)
+
+```bash
+# deployement d'une API fake de prediction sentiment et verification
+# NB : apply = create or update
+kubectl apply -f exo_api/my_api.yml
+kubectl get pods,rs,deploy
+
+# lancement d'un service sur ce deployment
+# NB : apply = create or update
+kubectl apply -f exo_api/my_service.yml
+kubectl get svc
+# NB : get plus global sur un namespace en particulier (default ici)
+kubectl get all -n default
+
+# creation d'une configmap et application aux pods utilisant ce ENVIRONMENT_TYPE
+kubectl create configmap my-config-map --from-literal ENVIRONMENT_TYPE=production
+kubectl apply -f exo_api/my_api.yml
+
+# modification de la valeur ENVIRONMENT_TYPE de la config map et rollout (avec verif)
+kubectl edit cm my-config-map
+kubectl rollout restart deployment sentiment-analysis-api
+kubectl rollout status deploy sentiment-analysis-api
+
+# ajout d'un secret alimentant ENVIRONMENT_TYPE lors du deployment et rollout (avec verif)
+kubectl create secret generic my-secret --from-literal my-key=my-value
+kubectl apply -f exo_api/my_api.yml
+kubectl rollout restart deployment sentiment-analysis-api
+kubectl rollout status deploy sentiment-analysis-api
+```
