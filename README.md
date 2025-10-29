@@ -90,7 +90,7 @@ kubectl create deployment nginx-deployment --image=nginx --replicas=10
 kubectl delete deployment nginx-deployment
 
 # execution d'un deploiement de pod configuré par yaml
-kubectl apply -f deploy/deployment.yml
+kubectl apply -f deploy/deployment_nginx.yml
 
 # lister les ressources
 kubectl api-resources
@@ -248,4 +248,18 @@ kubectl exec -it mariadb-0 -- ls -latR /etc/mysql/conf.d
 kubectl exec -it mariadb-0 -- /bin/sh
 mysql -uroot -p${MARIADB_ROOT_PASSWORD} -e 'show databases;'
 mysql -uroot -p${MARIADB_ROOT_PASSWORD} -e "SHOW VARIABLES LIKE 'max_allowed_packet';"
+```
+
+### Management du healthcheck (/deploy)
+
+```bash
+# verification healthcheck par probes (liveness / readyness)
+kubectl apply -f deploy/deployement_vote_probes.yaml
+
+# modification d'un deploiement avec effet immédiat (changement des conditions readyness/liveness pour mettre en erreur)
+kubectl edit deploy vote
+
+# verification des pods/replicaset/deployment
+kubectl get deploy,rs,pods
+kubectl describe pod vote-xxxx # ajuster avec le nom effectif du pod
 ```
