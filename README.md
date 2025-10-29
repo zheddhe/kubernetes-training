@@ -294,3 +294,52 @@ kubectl apply -f exo_api/my_api.yml
 kubectl rollout restart deployment sentiment-analysis-api
 kubectl rollout status deploy sentiment-analysis-api
 ```
+
+## 3. Helm
+
+### Installation
+
+```bash
+# download / install / check version
+sudo apt-get install -y curl gpg apt-transport-https
+curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey \
+  | gpg --dearmor \
+  | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get update
+sudo apt-get install -y helm
+helm version
+
+# listing des ressources récupérées localement
+helm list
+```
+
+### Configuration
+
+```bash
+# ajuster le fichier ~/.bashrc avec
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+echo "helm version: $(helm version)"
+```
+
+### Exemple avec airflow (/airflow)
+
+```bash
+# recuperation du chart airflow (verif et remove si besoin)
+helm repo add apache-airflow https://airflow.apache.org
+helm repo list
+#helm repo remove apache-airflow
+
+# Recupérer un chart spécifique et ses valeurs par défaut
+helm template apache-airflow/airflow --version 1.16.0 --set airflow.image.tag=2.9.3 > templates.yaml
+helm show values apache-airflow/airflow --version 1.16.0 > values.yaml
+
+# initier un namespace k8s et y installer l'application airflow
+kubectl create namespace airflow
+helm -n airflow upgrade --install airflow apache-airflow/airflow
+kubectl -n airflow describe pod airflow-postgresql-0 | sed -n '/Events/,$p'
+
+# (optionnel nettoyage) rollback une installation
+helm -n airflow uninstall airflow
+kubectl delete namespace airflow
+sudo systemctl restart k3s
+```
