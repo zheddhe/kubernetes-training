@@ -90,7 +90,7 @@ kubectl create deployment nginx-deployment --image=nginx --replicas=10
 kubectl delete deployment nginx-deployment
 
 # execution d'un deploiement de pod configuré par yaml
-kubectl apply -f deploy/deployment_nginx.yml
+kubectl apply -f deploy/deployment-nginx.yml
 
 # lister les ressources
 kubectl api-resources
@@ -101,7 +101,7 @@ kubectl get service # ou kubectl get svc
 kubectl delete service nginx-deployment
 
 # déployer un cluster IP service configuré par yaml
-kubectl apply -f svc/service_cluster_ip.yml
+kubectl apply -f svc/service-cluster-ip.yml
 
 # lister les endpoints des services
 kubectl get endpoints
@@ -116,12 +116,12 @@ kubectl get service # ou kubectl get svc
 kubectl delete service nginx-deployment
 
 # déployer un node port service configuré par yaml
-kubectl apply -f svc/service_node_port.yml
+kubectl apply -f svc/service-node-port.yml
 
 # deployer un load balancer service et le consulter puis le supprimer 
 # - prérequis : requiert MetalLB pour simuler un loadbalancer
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
-kubectl apply -f svc/metallb_config.yaml
+kubectl apply -f svc/metallb-config.yaml
 # - les commandes service a proprement parler
 kubectl expose deployment nginx-deployment --port=80 --type=LoadBalancer
 kubectl get service # ou kubectl get svc
@@ -142,14 +142,14 @@ http://10.0.0.241  (MetalLB IP)
 
 ```bash
 # déployer un load balancer service configuré par yaml
-kubectl apply -f svc/service_load_balancer.yml
+kubectl apply -f svc/service-load-balancer.yml
 
 # vérifier les replica set et les resizer dynamiquement
 kubectl get replicaset # ou kubectl get rs
 kubectl scale deploy nginx-deployment --replicas=1
 
 # créer un replica set par yaml
-kubectl create -f rs/replica_set.yml
+kubectl create -f rs/replica-set.yml
 
 # visualiser les composant d'un replica set
 kubectl describe replicaset httpd-replicaset # ou kubectl describe rs httpd-replicaset
@@ -174,15 +174,15 @@ kubectl delete namespace datascientest
 kubectl get storageclass
 
 # creation d'un volume via yaml (pas de ligne de commande disponible) et listing
-kubectl apply -f pv/persistent_volume.yml
+kubectl apply -f pv/persistent-volume.yml
 kubectl get pv
 
 # creation d'un volume claim via yaml (pas de ligne de commande disponible) et listing
-kubectl apply -f pvc/persistent_volume_claim.yml
+kubectl apply -f pvc/persistent-volume-claim.yml
 kubectl get pvc
 
 # creer un pod consommant ce volume claim
-kubectl apply -f pvc/datascientest_pod.yml
+kubectl apply -f pvc/datascientest-pod.yml
 kubectl get pod | grep pod-datascientest
 
 # Ajustement du contenu du pod et démarrage d'un service associé
@@ -191,7 +191,7 @@ kubectl exec -it pod-datascientest -- bin/bash
 echo "DATASCIENTEST" > /usr/share/nginx/html/index.html
 cat /usr/share/nginx/html/index.html
 # -- à l'extérieur du pod
-kubectl apply -f pvc/datascientest_service.yml
+kubectl apply -f pvc/datascientest-service.yml
 ```
 
 ### Management des secrets et config map (/secret + /cm)
@@ -254,7 +254,7 @@ mysql -uroot -p${MARIADB_ROOT_PASSWORD} -e "SHOW VARIABLES LIKE 'max_allowed_pac
 
 ```bash
 # verification healthcheck par probes (liveness / readyness)
-kubectl apply -f deploy/deployement_vote_probes.yaml
+kubectl apply -f deploy/deployement-vote-probes.yaml
 
 # modification d'un deploiement avec effet immédiat (changement des conditions readyness/liveness pour mettre en erreur)
 kubectl edit deploy vote
@@ -269,19 +269,19 @@ kubectl describe pod vote-xxxx # ajuster avec le nom effectif du pod
 ```bash
 # deployement d'une API fake de prediction sentiment et verification
 # NB : apply = create or update
-kubectl apply -f exo_api/my_api.yml
+kubectl apply -f exo_api/my-api.yml
 kubectl get pods,rs,deploy
 
 # lancement d'un service sur ce deployment
 # NB : apply = create or update
-kubectl apply -f exo_api/my_service.yml
+kubectl apply -f exo_api/my-service.yml
 kubectl get svc
 # NB : get plus global sur un namespace en particulier (default ici)
 kubectl get all -n default
 
 # creation d'une configmap et application aux pods utilisant ce ENVIRONMENT_TYPE
 kubectl create configmap my-config-map --from-literal ENVIRONMENT_TYPE=production
-kubectl apply -f exo_api/my_api.yml
+kubectl apply -f exo_api/my-api.yml
 
 # modification de la valeur ENVIRONMENT_TYPE de la config map et rollout (avec verif)
 kubectl edit cm my-config-map
@@ -290,7 +290,7 @@ kubectl rollout status deploy sentiment-analysis-api
 
 # ajout d'un secret alimentant ENVIRONMENT_TYPE lors du deployment et rollout (avec verif)
 kubectl create secret generic my-secret --from-literal my-key=my-value
-kubectl apply -f exo_api/my_api.yml
+kubectl apply -f exo_api/my-api.yml
 kubectl rollout restart deployment sentiment-analysis-api
 kubectl rollout status deploy sentiment-analysis-api
 ```
@@ -324,22 +324,75 @@ echo "helm version: $(helm version)"
 ### Exemple avec airflow (/airflow)
 
 ```bash
-# recuperation du chart airflow (verif et remove si besoin)
+# recuperation du chart airflow et verification
 helm repo add apache-airflow https://airflow.apache.org
 helm repo list
-#helm repo remove apache-airflow
+# (optionnel nettoyage)
+helm repo remove apache-airflow 
 
+# basculer sur 
 # Recupérer un chart spécifique et ses valeurs par défaut
-helm template apache-airflow/airflow --version 1.16.0 --set airflow.image.tag=2.9.3 > templates.yaml
+helm template apache-airflow/airflow --version 1.16.0 --set airflow.image.tag=2.10.5 > templates.yaml
 helm show values apache-airflow/airflow --version 1.16.0 > values.yaml
 
-# initier un namespace k8s et y installer l'application airflow
+# initier un namespace k8s et y basculer à ce contexte par defaut (et afficher les contextes)
 kubectl create namespace airflow
-helm -n airflow upgrade --install airflow apache-airflow/airflow
-kubectl -n airflow describe pod airflow-postgresql-0 | sed -n '/Events/,$p'
+sudo kubectl config set-context --current --namespace=airflow
+kubectl config get-contexts
 
+# deployment airflow et verification
+helm upgrade --install airflow apache-airflow/airflow \
+  --namespace airflow \
+  --version 1.16.0 \
+  --set postgresql.enabled=true \
+  --set postgresql.image.registry=docker.io \
+  --set postgresql.image.repository=bitnamilegacy/postgresql \
+  --set postgresql.image.tag=16.1.0-debian-11-r15
+kubectl -n airflow describe pod airflow-postgresql-0 | sed -n '/Events/,$p'
+helm list
 # (optionnel nettoyage) rollback une installation
 helm -n airflow uninstall airflow
-kubectl delete namespace airflow
+# (1) Forcer suppression du(des) pod(s) bloqué(s)
+kubectl get pods -A | grep airflow # donne la liste pour laquelle executer la commande suivante
+kubectl -n airflow delete pod airflow-redis-0 --grace-period=0 --force --ignore-not-found
+# (2) Supprimer namespace (ou finalizers)
+kubectl delete ns airflow
+# (3) Nettoyer runtime
+sudo crictl rm --all
+sudo crictl rmi --prune
 sudo systemctl restart k3s
+
+# verification du service et activation d'un forward du port service -> machine virtuelle
+kubectl get svc
+kubectl port-forward svc/airflow-webserver --address 0.0.0.0 8080:8080
+
+```
+
+## 3. Skopeo
+
+### Installation
+
+```bash
+# mise en contexte de la version ubuntu et listing des librairies associées
+. /etc/os-release
+echo "deb [signed-by=/usr/share/keyrings/containers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" \
+  | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+
+# recupération des librairies a jour via release key
+curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key \
+  | gpg --dearmor | sudo tee /usr/share/keyrings/containers-archive-keyring.gpg > /dev/null
+
+# apt update et installation skopeo
+sudo apt update
+sudo apt install --reinstall skopeo -y
+```
+
+### Utilisation
+
+```bash
+# verifier une version dans un repo public sans autentification
+skopeo inspect docker://docker.io/bitnami/postgresql:latest
+
+# recuperer la liste des tag dans un repo sans autentification
+skopeo list-tags docker://docker.io/bitnami/postgresql | jq -r '.Tags[]'
 ```

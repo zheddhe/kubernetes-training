@@ -178,7 +178,7 @@ metadata:
     heritage: Helm
 type: Opaque
 data:
-  webserver-secret-key: "U1ZWVmVqYzRUM2t6UTBSMVVrcHZaa0pWY2pONFRuaEdXR0ZtWkhGMWFWZz0="
+  webserver-secret-key: "VUdSaVl6ZGlRVFZEVlVKeU9WaG1jREU1VUZaUWJUUlRTSFpUTlROUFJFTT0="
 ---
 # Source: airflow/templates/configmaps/configmap.yaml
 ################################
@@ -1120,7 +1120,7 @@ spec:
       annotations:
         checksum/metadata-secret: 8c8ccea43b91003b5ed19c1cb7ae904bdbee3fa66010c473b88fb196e3c25e59
         checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
-        checksum/webserver-secret-key: 18f6d95a8b0ed5f4e1af7ead2839942774607aeff744f1ce2e17c3b652c09c44
+        checksum/webserver-secret-key: 341ea31ac6a3b5ee6f4e89963fd4ffc3018b00aebf1c3a5f0672903ad86e7343
         checksum/airflow-config: d0201b9c1b388d0c5126467bfd1aa6e456f59eeb82aecd50f35146461fac94a0
         checksum/webserver-config: 2f3fdfd294a37094d2abee43b2b09888a5c195ee03414996bf99a4681658af94
         checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
@@ -1373,7 +1373,7 @@ spec:
       hostIPC: false
       containers:
         - name: postgresql
-          image: docker.io/bitnami/postgresql:16.4.0-debian-12-r0
+          image: docker.io/bitnami/postgresql:16.1.0-debian-11-r15
           imagePullPolicy: "IfNotPresent"
           securityContext:
             allowPrivilegeEscalation: false
@@ -1830,7 +1830,7 @@ spec:
         checksum/metadata-secret: 8c8ccea43b91003b5ed19c1cb7ae904bdbee3fa66010c473b88fb196e3c25e59
         checksum/result-backend-secret: 98a68f230007cfa8f5d3792e1aff843a76b0686409e4a46ab2f092f6865a1b71
         checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
-        checksum/webserver-secret-key: d4a8a80c688915dcdd4f78364dfb2f621c27c09abbf81b7a8c31f57ee8a7e71b
+        checksum/webserver-secret-key: 9aa1be7a4fbbac839fb41d500917633d8f1b1da29445194acaf40988de3ba62c
         checksum/kerberos-keytab: 80979996aa3c1f48c95dfbe9bb27191e71f12442a08c0ed834413da9d430fd0e
         checksum/airflow-config: d0201b9c1b388d0c5126467bfd1aa6e456f59eeb82aecd50f35146461fac94a0
         checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
@@ -2339,7 +2339,7 @@ metadata:
     "helm.sh/hook-weight": "0"
 type: Opaque
 data:
-  fernet-key: "Vm1weVQxVmhTV3BpWW13eGJVaGxUVE5OVkdOblMwUkxhVkk0TW1FMU5saz0="
+  fernet-key: "VjBkT1pEZE5SVzVGU0ZseU1XRjBOSE5UUTNSUVRUVjROamt4YlVoc2RHUT0="
 ---
 # Source: airflow/templates/secrets/redis-secrets.yaml
 # We will create these secrets (if necessary) _even if_ we aren't
@@ -2369,7 +2369,7 @@ metadata:
     "helm.sh/hook-weight": "0"
 type: Opaque
 data:
-  password: "QTdJdXBzVFp4Vg=="
+  password: "RDBPQ0ZIV2xvVQ=="
 ---
 # Source: airflow/templates/secrets/redis-secrets.yaml
 ##################################
@@ -2391,7 +2391,7 @@ metadata:
     "helm.sh/hook-weight": "0"
 type: Opaque
 data:
-  connection: "cmVkaXM6Ly86QTdJdXBzVFp4VkByZWxlYXNlLW5hbWUtcmVkaXM6NjM3OS8w"
+  connection: "cmVkaXM6Ly86RDBPQ0ZIV2xvVUByZWxlYXNlLW5hbWUtcmVkaXM6NjM3OS8w"
 ---
 # Source: airflow/templates/jobs/create-user-job.yaml
 ################################
