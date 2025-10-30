@@ -366,36 +366,6 @@ sudo systemctl restart k3s
 kubectl get svc
 kubectl port-forward svc/airflow-webserver --address 0.0.0.0 8080:8080
 
-```
-
-## 3. Skopeo
-
-### Installation
-
-```bash
-# mise en contexte de la version ubuntu et listing des librairies associées
-. /etc/os-release
-echo "deb [signed-by=/usr/share/keyrings/containers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" \
-  | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-
-# recupération des librairies a jour via release key
-curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key \
-  | gpg --dearmor | sudo tee /usr/share/keyrings/containers-archive-keyring.gpg > /dev/null
-
-# apt update et installation skopeo
-sudo apt update
-sudo apt install --reinstall skopeo -y
-```
-
-### Utilisation
-
-```bash
-# verifier une version dans un repo public sans autentification
-skopeo inspect docker://docker.io/bitnami/postgresql:latest
-
-# recuperer la liste des tag dans un repo sans autentification
-skopeo list-tags docker://docker.io/bitnami/postgresql | jq -r '.Tags[]'
-
 # creer les PV et PVC pour les dags et logs
 mkdir -p dags
 kubectl create -f airflow-local-dags-folder-pvc.yaml
@@ -427,4 +397,80 @@ kubectl exec -it airflow-scheduler-7896d679dc-hkqzz -- bash
 
 # verification en continu des pods
 kubectl get pod -w
+
+# login sur docker (si credentials deja OK)
+docker login
+# login sur docker si credentials pas encore connus 
+docker login -u <user> -p <token_pwd>
+
+# creation d'une image docker à pousser sur docker hub (afin d'être visible par kubernetes)
+# NB : se positionner dans airflow/order/docker/prod/python_transform -> ajuster le chemin dans la commande
+cd ~/github-kubernetes/kubernetes-training/airflow/order/docker/prod/python_transform
+docker build -t python-transform .
+# tag et push de l'image sur docker hub
+# NB : ajuster le nom d'utilisateur dans les deux commandes
+docker tag python-transform zheddhe/order-python-transform
+docker push zheddhe/order-python-transform
+# execution de test de cette image avec initialisation des fichiers de test et visualisation logs
+cd ~/github-kubernetes/kubernetes-training/airflow/order/
+cp data/orders/2024-05-09.json data/to_ingest/bronze/orders.json
+kubectl create -f python-transform-job.yaml
+kubectl get pod -w
+# NB : remplacer par le nom exact du pod
+kubectl logs python-transform-dfngv -c python-transform
+
+# creation d'une image docker à pousser sur docker hub (afin d'être visible par kubernetes)
+# NB : se positionner dans airflow/order/docker/prod/python_transform -> ajuster le chemin dans la commande
+cd ~/github-kubernetes/kubernetes-training/airflow/order/docker/prod/python_load
+docker build -t python-load .
+# tag et push de l'image sur docker hub
+# NB : ajuster le nom d'utilisateur dans les deux commandes
+docker tag python-load zheddhe/order-python-load
+docker push zheddhe/order-python-load
+# execution de test de cette image avec initialisation des fichiers de test et visualisation logs
+cd ~/github-kubernetes/kubernetes-training/airflow/order/
+kubectl create -f python-load-job.yaml
+kubectl get pod -w
+# NB : remplacer par le nom exact du pod
+kubectl logs python-load-kcc9d -c python-load
+# deployer les secrets et recréer le pod
+kubectl create -f sql-conn-secret.yaml
+kubectl delete job python-load
+kubectl create -f python-load-job.yaml
+
+# creation des PV/PVC
+kubectl create -f order-data-folder-pv.yaml
+kubectl create -f order-data-folder-pvc.yaml
+
+# affichage dans le pod postgresql
+kubectl exec -it airflow-postgresql-0 -- psql -U postgres postgres
+```
+
+## 3. Skopeo
+
+### Installation
+
+```bash
+# mise en contexte de la version ubuntu et listing des librairies associées
+. /etc/os-release
+echo "deb [signed-by=/usr/share/keyrings/containers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" \
+  | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+
+# recupération des librairies a jour via release key
+curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key \
+  | gpg --dearmor | sudo tee /usr/share/keyrings/containers-archive-keyring.gpg > /dev/null
+
+# apt update et installation skopeo
+sudo apt update
+sudo apt install --reinstall skopeo -y
+```
+
+### Utilisation
+
+```bash
+# verifier une version dans un repo public sans autentification
+skopeo inspect docker://docker.io/bitnami/postgresql:latest
+
+# recuperer la liste des tag dans un repo sans autentification
+skopeo list-tags docker://docker.io/bitnami/postgresql | jq -r '.Tags[]'
 ```

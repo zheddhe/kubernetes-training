@@ -44,7 +44,7 @@ table_order = table(
 
 def load_config():
     config = {}
-    config['host'] = os.getenv('AIRFLOW_POSTGRESQL_SERVICE_HOST')
+    config['host'] = os.getenv('HOST')
     config['database'] = os.getenv('DATABASE')
     config['user'] = os.getenv('USER')
     config['password'] = os.getenv('PASSWORD')
@@ -131,6 +131,7 @@ if __name__ == '__main__':
     data_directory = 'data'
     config = load_config()
     print(os.environ)
+    print(config)
     df_customer = pd.read_csv(f'{data_directory}/to_ingest/silver/customers.csv')
     upsert_customer_to_psql(table_customer, df_customer)
     df_product = pd.read_csv(f'{data_directory}/to_ingest/silver/products.csv')
