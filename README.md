@@ -395,4 +395,36 @@ skopeo inspect docker://docker.io/bitnami/postgresql:latest
 
 # recuperer la liste des tag dans un repo sans autentification
 skopeo list-tags docker://docker.io/bitnami/postgresql | jq -r '.Tags[]'
+
+# creer les PV et PVC pour les dags et logs
+mkdir -p dags
+kubectl create -f airflow-local-dags-folder-pvc.yaml
+kubectl create -f airflow-local-dags-folder-pv.yaml
+mkdir -p logs
+kubectl create -f airflow-local-logs-folder-pvc.yaml
+kubectl create -f airflow-local-logs-folder-pv.yaml
+
+# upgrade de la configuration en surchargeant avec un fichier de config yaml additionnel (my-values.yaml)
+# necessite au préalable d'avoir arrêté en cascade les statefulset qui sont immuables
+kubectl delete sts airflow-triggerer -n airflow --cascade=orphan
+kubectl delete sts airflow-worker -n airflow --cascade=orphan
+
+helm upgrade --install airflow apache-airflow/airflow \
+  --namespace airflow \
+  --version 1.16.0 \
+  --set postgresql.enabled=true \
+  --set postgresql.image.registry=docker.io \
+  --set postgresql.image.repository=bitnamilegacy/postgresql \
+  --set postgresql.image.tag=16.1.0-debian-11-r15 \
+  -f my-values.yaml
+
+# verification de commande dans un pod (exemple listing d'un fichier a un emplacement souhaité via PV)
+kubectl exec airflow-triggerer-0 -- ls dags # une commande unique et sortie
+kubectl exec -it airflow-triggerer-0 -- bash # un bash en interactif
+kubectl exec -it airflow-webserver-6fd8d648b5-zkqmw -- bash
+kubectl exec -it airflow-scheduler-7896d679dc-hkqzz -- bash
+# pip show apache-airflow-providers-postgres
+
+# verification en continu des pods
+kubectl get pod -w
 ```

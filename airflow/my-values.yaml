@@ -1,0 +1,24 @@
+# PVC des DAGS
+dags:
+  persistence:
+    enabled: true
+    existingClaim: airflow-local-dags-folder
+
+# PVC des LOGS
+logs:
+  persistence:
+    enabled: true
+    existingClaim: airflow-local-logs-folder
+
+# identifiant (1000 = user ubuntu courant en general)
+uid: 1000
+gid: 1000
+
+# intervalle de scanning des DAG pour le scheduler
+scheduler:
+  env:
+  - name: AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL
+    value: "10"
+
+# executor (hybride entre celery qui est persistant et kubernetes qui est éphemère isolé conteneurisé)
+executor: CeleryKubernetesExecutor
