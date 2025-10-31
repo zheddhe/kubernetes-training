@@ -330,13 +330,13 @@ helm repo list
 # (optionnel nettoyage)
 helm repo remove apache-airflow 
 
-# basculer sur 
 # Recupérer un chart spécifique et ses valeurs par défaut
 helm template apache-airflow/airflow --version 1.16.0 --set airflow.image.tag=2.10.5 > templates.yaml
 helm show values apache-airflow/airflow --version 1.16.0 > values.yaml
 
 # initier un namespace k8s et y basculer à ce contexte par defaut (et afficher les contextes)
 kubectl create namespace airflow
+# basculer sur le contexte namespace airflow
 sudo kubectl config set-context --current --namespace=airflow
 kubectl config get-contexts
 

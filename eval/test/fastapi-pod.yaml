@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fastapi
+  labels:
+    app: fastapi
+spec:
+  containers:
+  - name: fastapi
+    image: docker.io/zheddhe/k8s-dst-eval-fastapi:latest
+    command: ["uvicorn"]
+    args: ["main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    volumeMounts:
+      - name: app-src
+        mountPath: /app
+    env:
+      # variables venant du secret mysql-user
+      - name: MYSQL_USER
+        valueFrom:
+          secretKeyRef:
+            name: mysql-user
+            key: MYSQL_USER
+      - name: MYSQL_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-user
+            key: MYSQL_PASSWORD
+      - name: MYSQL_DATABASE
+        valueFrom:
+          secretKeyRef:
+            name: mysql-user
+            key: MYSQL_DATABASE
+  volumes:
+    - name: app-src
+      hostPath:
+        # chemin uniquement pour le test avec hostpath local non portable
+        path: /home/ubuntu/github-kubernetes/kubernetes-training/eval/test/app
+        type: Directory

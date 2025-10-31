@@ -1,0 +1,1 @@
+Ce répertoire est réservé aux ressources applicatives (non utilisé dans l’évaluation fournie).

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-user
+  namespace: eval
+type: Opaque
+data:
+  # app user: my_user
+  # echo -n 'my_user' | base64
+  MYSQL_USER: bXlfdXNlcg==
+  # app password: my_user_pwd
+  # echo -n 'my_user_pwd' | base64
+  MYSQL_PASSWORD: bXlfdXNlcl9wd2Q=
+  # db name: my_db
+  # echo -n 'my_db' | base64
+  MYSQL_DATABASE: bXlfZGI=
