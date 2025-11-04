@@ -64,10 +64,13 @@ sudo chown $USER:$USER ~/.kube/config
 kubectl cluster-info
 kubectl get nodes -o wide
 
-# arrêt (et relance)
+# arrêt / démarrage / relance
 sudo systemctl stop k3s
 sudo systemctl start k3s
-# sudo systemctl restart k3s
+sudo systemctl restart k3s
+
+# desinstallation
+sudo /usr/local/bin/k3s-uninstall.sh
 ```
 
 ### Management des pods/services (/pod + /deploy + /svc)
