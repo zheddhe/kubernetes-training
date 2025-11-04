@@ -50,7 +50,7 @@ uv --version
 
 ## 2. K3s
 
-### Installation
+### Installation (et arrêt/relance si besoin)
 
 ```bash
 # download / install / check version
@@ -63,6 +63,11 @@ sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown $USER:$USER ~/.kube/config
 kubectl cluster-info
 kubectl get nodes -o wide
+
+# arrêt (et relance)
+sudo systemctl stop k3s
+sudo systemctl start k3s
+# sudo systemctl restart k3s
 ```
 
 ### Management des pods/services (/pod + /deploy + /svc)
